@@ -1,0 +1,142 @@
+From eeb52e3939dc6f92a2f398822dad80fe28aeede8 Mon Sep 17 00:00:00 2001
+From: Ernest Samuel <toskid91@gmail.com>
+Date: Mon, 17 Aug 2020 10:30:35 +0100
+Subject: [PATCH] create patch file
+
+---
+ __pycache__/client3.cpython-38.opt-2.pyc | Bin 0 -> 1109 bytes
+ client3.py                               |  16 ++++++++++------
+ client_test.py                           |  16 +++++++++-------
+ server3.py                               |   4 ++--
+ 4 files changed, 21 insertions(+), 15 deletions(-)
+ create mode 100644 __pycache__/client3.cpython-38.opt-2.pyc
+
+diff --git a/__pycache__/client3.cpython-38.opt-2.pyc b/__pycache__/client3.cpython-38.opt-2.pyc
+new file mode 100644
+index 0000000000000000000000000000000000000000..892f2e2b04191ce4e9ea7dd8bc4497fc44b87957
+GIT binary patch
+literal 1109
+zcmYjPL2uJa5Z<-dj?*TkEono<B_JxWL@5Y82}L}hw1o<Z2wL^PD#&uPQ)-&T>F!2P
+z%}Y<^SMc<t^vGY@>w5>dbK=D8npUheGvBN~&(40Hy=rxa;QDK;m00wjO@3b$OrD{s
+zujm93v`08~(c_+rKKET@oC%Ky!snr2BKSmjNra+=F@my)jy(B4%s_ZXH_7|Yd=~s^
+z1?b1>bPj^)6<||#PR{8$ozC0H7c#;ZVF9^2{3?{->KW}YUgJxAnb)BXi%@$^;F>5y
+z4VGXT>IZC@oKb4`W}x;D5woy_z5>hWt58Qj_ix!Ujx}<wKm?0ozCqA0G{~7(e0{tv
+z=q`yDzu|33dwk<i>tSnct(SMx-eInE>(Tv3f2<vkK%P9!#GikkX5T3xU9`&;AYy16
+zXzCfd398m0r&L?yHHh%>JbLQ6oL%Pr#GCkaB7*DWlufA3ChUM=H(}cZO6T1pQ_}e`
+z+0TRthBE6yk*DhDn}_Gb)C32;Jk@bvg5y!HLE3Fo#t)K$Uq)^LrET#Gk+T?nJl|+_
+z_7q6fdA;6V-`(BX?ri4WQ6C0cbzWwAd$iwq_2%`)s)p|2s>UL#4_1dK4?EpnhMb4@
+zh9{=-0rY07(>HlG&`qqW++g_;oyVs_Wfk|jwxNq<u{9@D4Z(y8iepj{WEZ8H(CZju
+zuPv>*uF=@zC3le|y#V{}Md9qMnh5*YNp+UTn5hsQVG(6i&bhZq(oeHNl8kS^wF-&m
+zifX31c?UIWt*E<Ayqk;e7)0^7^ouwyUlPY*K^#YSn+5R)jmMEY77H4G{rQIRH@9BI
+z4L&!Ly<WC|PXbPj(mX73!*tdM&OWMqU_zM=MBeAY+r6!wcZRl|SeG3S(mo`K36S*x
+z3`K;0Stwq*s9D0A`4F(sK`#5LHcUb)Oz4I{@zC|CWP}R1k&tDJ?Ei6N;HGJye^b&<
+qg)HQJ+|R|R2Tzu8OWi~lQTO=FXI@l}qR6k%rq6J99<4@ic|QSH`VMLU
+
+literal 0
+HcmV?d00001
+
+diff --git a/client3.py b/client3.py
+index f1771c3..d9be76a 100644
+--- a/client3.py
++++ b/client3.py
+@@ -24,7 +24,7 @@ import json
+ import random
+ 
+ # Server API URLs
+-QUERY = "http://localhost:8080/query?id={}"
++QUERY = "http://localhost:8085/query?id={}"
+ 
+ # 500 server request
+ N = 500
+@@ -35,25 +35,29 @@ def getDataPoint(quote):
+ 	stock = quote['stock']
+ 	bid_price = float(quote['top_bid']['price'])
+ 	ask_price = float(quote['top_ask']['price'])
+-	price = bid_price
++	price = (bid_price + ask_price)/2
+ 	return stock, bid_price, ask_price, price
+ 
+ def getRatio(price_a, price_b):
+ 	""" Get ratio of price_a and price_b """
+ 	""" ------------- Update this function ------------- """
+ 	""" Also create some unit tests for this function in client_test.py """
+-	return 1
+-
++	if price_b == 0:
++		return 
++	return price_a/price_b
+ # Main
+ if __name__ == "__main__":
+ 
+ 	# Query the price once every N seconds.
+-	for _ in iter(range(N)):
++	for _ in range(N):
+ 		quotes = json.loads(urllib.request.urlopen(QUERY.format(random.random())).read())
+ 
+ 		""" ----------- Update to get the ratio --------------- """
++		prices = {}
+ 		for quote in quotes:
+ 			stock, bid_price, ask_price, price = getDataPoint(quote)
++			prices[stock] = price
+ 			print ("Quoted %s at (bid:%s, ask:%s, price:%s)" % (stock, bid_price, ask_price, price))
++			print(f'Quoted {stock} at (bid:{bid_price}, ask:{ask_price}, price:{price})')
+ 
+-		print ("Ratio %s" % getRatio(price, price))
++		print ("Ratio %s" % getRatio(prices['ABC'], prices['DEF']))
+diff --git a/client_test.py b/client_test.py
+index af2bf26..85851ac 100644
+--- a/client_test.py
++++ b/client_test.py
+@@ -1,5 +1,5 @@
+ import unittest
+-from client3 import getDataPoint
++from client3 import getDataPoint, getRatio
+ 
+ class ClientTest(unittest.TestCase):
+   def test_getDataPoint_calculatePrice(self):
+@@ -8,12 +8,14 @@ class ClientTest(unittest.TestCase):
+       {'top_ask': {'price': 121.68, 'size': 4}, 'timestamp': '2019-02-11 22:06:30.572453', 'top_bid': {'price': 117.87, 'size': 81}, 'id': '0.109974697771', 'stock': 'DEF'}
+     ]
+     """ ------------ Add the assertion below ------------ """
+-
+-  def test_getDataPoint_calculatePriceBidGreaterThanAsk(self):
+-    quotes = [
+-      {'top_ask': {'price': 119.2, 'size': 36}, 'timestamp': '2019-02-11 22:06:30.572453', 'top_bid': {'price': 120.48, 'size': 109}, 'id': '0.109974697771', 'stock': 'ABC'},
+-      {'top_ask': {'price': 121.68, 'size': 4}, 'timestamp': '2019-02-11 22:06:30.572453', 'top_bid': {'price': 117.87, 'size': 81}, 'id': '0.109974697771', 'stock': 'DEF'}
+-    ]
++    for qoute in quotes:
++      self.assertEqual(getDataPoint(qoute), (qoute['stock'], qoute['top_bid']['price'], qoute['top_ask']['price'], (qoute['top_bid']['price'] + qoute['top_ask']['price'])/2))
++      self.assertEqual(1,1)
++  #def test_getDataPoint_calculatePriceBidGreaterThanAsk(self):
++   # quotes = [
++    #  {'top_ask': {'price': 119.2, 'size': 36}, 'timestamp': '2019-02-11 22:06:30.572453', 'top_bid': {'price': 120.48, 'size': 109}, 'id': '0.109974697771', 'stock': 'ABC'},
++     # {'top_ask': {'price': 121.68, 'size': 4}, 'timestamp': '2019-02-11 22:06:30.572453', 'top_bid': {'price': 117.87, 'size': 81}, 'id': '0.109974697771', 'stock': 'DEF'}
++    #]
+     """ ------------ Add the assertion below ------------ """
+ 
+ 
+diff --git a/server3.py b/server3.py
+index 2de4e28..1d59866 100644
+--- a/server3.py
++++ b/server3.py
+@@ -202,7 +202,7 @@ def get(req_handler, routes):
+                 req_handler.wfile.write(bytes(data,  encoding = 'utf-8'))
+                 return
+ 
+-def run(routes, host = '0.0.0.0', port = 8080):
++def run(routes, host = '0.0.0.0', port = 8085):
+     """ Runs a class as a server whose methods have been decorated with
+         @route.
+     """
+@@ -215,7 +215,7 @@ def run(routes, host = '0.0.0.0', port = 8080):
+     thread = threading.Thread(target = server.serve_forever)
+     thread.daemon = True
+     thread.start()
+-    print ('HTTP server started on port 8080')
++    print ('HTTP server started on port 8085')
+     while True:
+         from time import sleep
+         sleep(1)
+-- 
+2.26.2.windows.1
+
